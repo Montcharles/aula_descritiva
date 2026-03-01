@@ -1,0 +1,16 @@
+#Instalar pacotes necessários (executar apenas uma vez)
+
+install.packages("readxl") # Importar dados do Excel
+install.packages("dplyr") # Manipulação de dados
+install.packages("ggplot2") # Gráficos avançados
+install.packages("gridExtra") # Múltiplos gráficos
+install.packages("moments") # Assimetria e curtose
+
+
+1.2 Organização dos Arquivos
+1.	Coloque o arquivo Excel na pasta Desktop (Área de Trabalho)
+2.	Verifique que o nome do arquivo está correto
+3.	Abra o R ou RStudio
+4.	Crie um novo script R (File > New File > R Script)
+
+
