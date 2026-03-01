@@ -1,0 +1,90 @@
+# Média, mediana e moda da massa 
+
+media_massa   <- mean(morfometria$Massa_g)
+mediana_massa <- median(morfometria$Massa_g)
+
+calcular_moda <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+moda_massa <- calcular_moda(morfometria$Massa_g)
+
+media_massa; mediana_massa; moda_massa
+
+
+library(ggplot2)
+
+ggplot(morfometria, aes(x = Massa_g)) +
+  geom_histogram(bins = 10, fill = "#38bdf8", color = "white", alpha = 0.9) +
+  geom_vline(xintercept = media_massa,
+             color = "#ef4444", linetype = "dashed", linewidth = 1.1) +
+  geom_vline(xintercept = mediana_massa,
+             color = "#22c55e", linetype = "dotted", linewidth = 1.1) +
+  geom_vline(xintercept = moda_massa,
+             color = "#6366f1", linetype = "dotdash", linewidth = 1.1) +
+  labs(title = "Massa das aves: média, mediana e moda",
+       x = "Massa (g)", y = "Frequência") +
+  annotate("text", x = media_massa,   y = Inf, vjust = 2,
+           label = paste0("Média = ", round(media_massa, 1)),
+           color = "#ef4444", fontface = "bold", angle = 90, size = 4) +
+  annotate("text", x = mediana_massa, y = Inf, vjust = 2,
+           label = paste0("Mediana = ", round(mediana_massa, 1)),
+           color = "#22c55e", fontface = "bold", angle = 90, size = 4) +
+  annotate("text", x = moda_massa,    y = Inf, vjust = 2,
+           label = paste0("Moda = ", round(moda_massa, 1)),
+           color = "#6366f1", fontface = "bold", angle = 90, size = 4) +
+  theme_minimal(base_size = 14)
+
+
+#Box plot como representação gráfica
+install.packages("tidyr")  
+library(tidyr)
+library(dplyr)
+
+library(ggplot2)
+
+# 1) Boxplot de Comprimento
+p_comp <- ggplot(morfometria, aes(y = Comprimento_cm)) +
+  geom_boxplot(fill = "#38bdf8", color = "black", alpha = 0.8) +
+  labs(title = "Boxplot do Comprimento",
+       y = "Comprimento (cm)", x = "") +
+  theme_minimal(base_size = 14)
+
+# 2) Boxplot de Massa
+p_massa <- ggplot(morfometria, aes(y = Massa_g)) +
+  geom_boxplot(fill = "#f97316", color = "black", alpha = 0.8) +
+  labs(title = "Boxplot da Massa",
+       y = "Massa (g)", x = "") +
+  theme_minimal(base_size = 14)
+
+# 3) Boxplot de Envergadura
+p_env <- ggplot(morfometria, aes(y = Envergadura_cm)) +
+  geom_boxplot(fill = "#22c55e", color = "black", alpha = 0.8) +
+  labs(title = "Boxplot da Envergadura",
+       y = "Envergadura (cm)", x = "") +
+  theme_minimal(base_size = 14)
+
+# 4) Três boxplots lado a lado em um único gráfico
+
+# Reorganizar dados para formato longo
+morf_long <- morfometria %>%
+  dplyr::select(Comprimento_cm, Massa_g, Envergadura_cm) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Variavel",
+               values_to = "Valor")
+
+# Boxplot conjunto
+library(ggplot2)
+
+ggplot(morf_long, aes(x = Variavel, y = Valor, fill = Variavel)) +
+  geom_boxplot(alpha = 0.8, color = "black") +
+  labs(title = "Boxplots das Variáveis Morfométricas",
+       x = "Variável", y = "Valor") +
+  scale_fill_manual(values = c("Comprimento_cm" = "#38bdf8",
+                               "Massa_g"        = "#f97316",
+                               "Envergadura_cm" = "#22c55e")) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 20, hjust = 1))
+
+
