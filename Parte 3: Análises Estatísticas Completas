@@ -1,0 +1,28 @@
+
+# ======================================================================
+# SCRIPT 2: DISTRIBUIÇÕES DE FREQUÊNCIA
+# ======================================================================
+
+library(dplyr)
+
+# ----- FREQUÊNCIAS PARA VARIÁVEIS QUALITATIVAS -----
+
+# Frequência absoluta - Espécies
+freq_especies <- table(morfometria$Espécie)
+print("Frequência Absoluta de Espécies:")
+print(freq_especies)
+
+# Frequência relativa (proporção)
+freq_rel_especies <- prop.table(freq_especies)
+print("Frequência Relativa de Espécies:")
+print(round(freq_rel_especies, 3))
+
+# Frequência percentual
+freq_perc_especies <- prop.table(freq_especies) * 100
+print("Frequência Percentual de Espécies:")
+print(round(freq_perc_especies, 2))
+
+# Frequência por Habitat
+freq_habitat <- table(morfometria$Habitat)
+print("Frequência por Habitat:")
+print(freq_habitat)
