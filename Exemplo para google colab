@@ -1,0 +1,268 @@
+# Acessar: https://colab.research.google.com/
+
+###########################################################
+# 0. Instalação de pacotes (apenas se ainda não existirem)
+###########################################################
+# No Colab (R), em geral você roda estes install.packages()
+# uma vez por sessão, depois pode comentar.
+
+install.packages("readxl")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("gridExtra")
+install.packages("tidyr")
+install.packages("moments")
+
+###########################################################
+# 1. Carregar pacotes
+###########################################################
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(tidyr)
+library(moments)
+
+###########################################################
+# 2. Download do arquivo do GitHub para o ambiente do Colab
+###########################################################
+# URL "raw" do Excel no GitHub
+url_excel <- "https://github.com/Montcharles/aula_descritiva/raw/main/Dados%20Ecol%C3%B3gicos%20Descritiva.xlsx"
+
+# Nome local do arquivo (será salvo no diretório de trabalho do Colab)
+arquivo_local <- "Dados_Ecologicos_Descritiva.xlsx"
+
+download.file(url_excel, destfile = arquivo_local, mode = "wb")
+
+if (!file.exists(arquivo_local)) {
+  stop("Arquivo não foi baixado corretamente.")
+}
+
+###########################################################
+# 3. Leitura das planilhas do Excel
+###########################################################
+morfometria  <- read_excel(arquivo_local, sheet = "Medidas Morfométricas")
+riqueza      <- read_excel(arquivo_local, sheet = "Riqueza de Espécies")
+ambientais   <- read_excel(arquivo_local, sheet = "Parâmetros Ambientais")
+crescimento  <- read_excel(arquivo_local, sheet = "Crescimento Populacional")
+
+head(morfometria)
+head(riqueza)
+head(ambientais)
+head(crescimento)
+
+str(morfometria)
+summary(morfometria)
+
+###########################################################
+# 4. Tabelas de frequência
+###########################################################
+freq_especies <- table(morfometria$Espécie)
+cat("Frequência Absoluta de Espécies:\n")
+print(freq_especies)
+
+freq_rel_especies  <- prop.table(freq_especies)
+freq_perc_especies <- freq_rel_especies * 100
+
+cat("\nFrequência Relativa de Espécies:\n")
+print(round(freq_rel_especies, 3))
+
+cat("\nFrequência Percentual de Espécies:\n")
+print(round(freq_perc_especies, 2))
+
+freq_habitat <- table(morfometria$Habitat)
+cat("\nFrequência por Habitat:\n")
+print(freq_habitat)
+
+###########################################################
+# 5. Histogramas simples
+###########################################################
+
+library(ggplot2) # Load the ggplot2 library
+
+ggplot(morfometria, aes(x = Comprimento_cm)) +
+  geom_histogram(bins = 10, fill = "#3498db", color = "black") +
+  labs(title = "Distribuição do Comprimento",
+       x = "Comprimento (cm)", y = "Frequência") +
+  theme_minimal()
+
+ggplot(morfometria, aes(x = Massa_g)) +
+  geom_histogram(bins = 10, fill = "#e74c3c", color = "black") +
+  labs(title = "Distribuição da Massa",
+       x = "Massa (g)", y = "Frequência") +
+  theme_minimal()
+
+ggplot(morfometria, aes(x = Envergadura_cm)) +
+  geom_histogram(bins = 10, fill = "#2ecc71", color = "black") +
+  labs(title = "Distribuição da Envergadura",
+       x = "Envergadura (cm)", y = "Frequência") +
+  theme_minimal()
+
+###########################################################
+# 6. Histograma da massa facetado por espécie
+###########################################################
+ggplot(morfometria, aes(x = Massa_g)) +
+  geom_histogram(bins = 8, fill = "#e67e22", color = "black") +
+  facet_wrap(~ Espécie, scales = "free_y") +
+  labs(title = "Distribuição da Massa por Espécie",
+       x = "Massa (g)", y = "Frequência") +
+  theme_minimal()
+
+###########################################################
+# 7. Histogramas com densidade (3 gráficos lado a lado)
+###########################################################
+library(gridExtra) # Load the gridExtra package
+
+p_comp <- ggplot(morfometria, aes(x = Comprimento_cm)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 10,
+                 fill = "#3498db", color = "black") +
+  labs(title = "Comprimento", x = "Comprimento (cm)",
+       y = "Frequência relativa") +
+  theme_minimal()
+
+p_massa <- ggplot(morfometria, aes(x = Massa_g)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 10,
+                 fill = "#e74c3c", color = "black") +
+  labs(title = "Massa", x = "Massa (g)",
+       y = "Frequência relativa") +
+  theme_minimal()
+
+p_env <- ggplot(morfometria, aes(x = Envergadura_cm)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 10,
+                 fill = "#2ecc71", color = "black") +
+  labs(title = "Envergadura", x = "Envergadura (cm)",
+       y = "Frequência relativa") +
+  theme_minimal()
+
+grid.arrange(p_comp, p_massa, p_env, nrow = 1)
+
+# Versão com tema customizado + densidade
+tema <- theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.major = element_line(color = "grey85"),
+    panel.grid.minor = element_blank(),
+    plot.title      = element_text(face = "bold", hjust = 0.5),
+    axis.title      = element_text(face = "bold"),
+    axis.text       = element_text(color = "grey20")
+  )
+
+p_comp <- ggplot(morfometria, aes(x = Comprimento_cm)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 8,
+                 fill = "#38bdf8", color = "white", alpha = 0.9) +
+  geom_density(color = "#0f766e", linewidth = 1) +
+  labs(title = "Comprimento das Aves",
+       x = "Comprimento (cm)", y = "Frequência relativa") +
+  tema
+
+p_massa <- ggplot(morfometria, aes(x = Massa_g)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 8,
+                 fill = "#f97316", color = "white", alpha = 0.9) +
+  geom_density(color = "#c2410c", linewidth = 1) +
+  labs(title = "Massa Corporal",
+       x = "Massa (g)", y = "Frequência relativa") +
+  tema
+
+p_env <- ggplot(morfometria, aes(x = Envergadura_cm)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 8,
+                 fill = "#22c55e", color = "white", alpha = 0.9) +
+  geom_density(color = "#15803d", linewidth = 1) +
+  labs(title = "Envergadura",
+       x = "Envergadura (cm)", y = "Frequência relativa") +
+  tema
+
+grid.arrange(p_comp, p_massa, p_env, nrow = 1)
+
+###########################################################
+# 8. Média, mediana e moda da Massa + linhas verticais
+###########################################################
+media_massa   <- mean(morfometria$Massa_g)
+mediana_massa <- median(morfometria$Massa_g)
+
+calcular_moda <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+moda_massa <- calcular_moda(morfometria$Massa_g)
+
+media_massa; mediana_massa; moda_massa
+
+ggplot(morfometria, aes(x = Massa_g)) +
+  geom_histogram(bins = 10, fill = "#38bdf8", color = "white", alpha = 0.9) +
+  geom_vline(xintercept = media_massa,
+             color = "#ef4444", linetype = "dashed", linewidth = 1.1) +
+  geom_vline(xintercept = mediana_massa,
+             color = "#22c55e", linetype = "dotted", linewidth = 1.1) +
+  geom_vline(xintercept = moda_massa,
+             color = "#6366f1", linetype = "dotdash", linewidth = 1.1) +
+  labs(title = "Massa das aves: média, mediana e moda",
+       x = "Massa (g)", y = "Frequência") +
+  annotate("text", x = media_massa,   y = Inf, vjust = 2,
+           label = paste0("Média = ", round(media_massa, 1)),
+           color = "#ef4444", fontface = "bold", angle = 90, size = 4) +
+  annotate("text", x = mediana_massa, y = Inf, vjust = 2,
+           label = paste0("Mediana = ", round(mediana_massa, 1)),
+           color = "#22c55e", fontface = "bold", angle = 90, size = 4) +
+  annotate("text", x = moda_massa,    y = Inf, vjust = 2,
+           label = paste0("Moda = ", round(moda_massa, 1)),
+           color = "#6366f1", fontface = "bold", angle = 90, size = 4) +
+  theme_minimal(base_size = 14)
+
+###########################################################
+# 9. Boxplots individuais
+###########################################################
+p_comp_box <- ggplot(morfometria, aes(y = Comprimento_cm)) +
+  geom_boxplot(fill = "#38bdf8", color = "black", alpha = 0.8) +
+  labs(title = "Boxplot do Comprimento",
+       y = "Comprimento (cm)", x = "") +
+  theme_minimal(base_size = 14)
+
+p_massa_box <- ggplot(morfometria, aes(y = Massa_g)) +
+  geom_boxplot(fill = "#f97316", color = "black", alpha = 0.8) +
+  labs(title = "Boxplot da Massa",
+       y = "Massa (g)", x = "") +
+  theme_minimal(base_size = 14)
+
+p_env_box <- ggplot(morfometria, aes(y = Envergadura_cm)) +
+  geom_boxplot(fill = "#22c55e", color = "black", alpha = 0.8) +
+  labs(title = "Boxplot da Envergadura",
+       y = "Envergadura (cm)", x = "") +
+  theme_minimal(base_size = 14)
+
+grid.arrange(p_comp_box, p_massa_box, p_env_box, nrow = 1)
+
+###########################################################
+# 10. Boxplots conjuntos (pivot_longer -> pivot_longer)
+###########################################################
+morf_long <- morfometria %>%
+  dplyr::select(Comprimento_cm, Massa_g, Envergadura_cm) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Variavel",
+               values_to = "Valor")
+
+ggplot(morf_long, aes(x = Variavel, y = Valor, fill = Variavel)) +
+  geom_boxplot(alpha = 0.8, color = "black") +
+  labs(title = "Boxplots das Variáveis Morfométricas",
+       x = "Variável", y = "Valor") +
+  scale_fill_manual(values = c("Comprimento_cm" = "#38bdf8",
+                               "Massa_g"        = "#f97316",
+                               "Envergadura_cm" = "#22c55e")) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 20, hjust = 1))
+
+###########################################################
+# 11.  Assimetria e curtose com 'moments'
+###########################################################
+
+# instalar uma vez por sessão (se ainda não instalou):
+install.packages("moments")
+
+# carregar o pacote
+library(moments)
+
+# calcular assimetria e curtose de Massa_g
+skew_massa  <- skewness(morfometria$Massa_g, na.rm = TRUE)
+kurt_massa  <- kurtosis(morfometria$Massa_g, na.rm = TRUE)  # curtose total (não excesso)
+
+skew_massa
+kurt_massa
