@@ -1,0 +1,37 @@
+# =====================================================================
+# SCRIPT 1: IMPORTAÇÃO DOS DADOS
+# =====================================================================
+
+# Carregar pacotes
+library(readxl)
+library(dplyr)
+
+# Definir caminho do arquivo Excel (escolha UMA das duas linhas abaixo) IMPORTANTE COPIAR E COLAR O CAMINHO DO ARQUIVO NO SCRIPT
+
+# Opção 1: barras normais - clique com botão direito do mouse e copie o caminho do arquivo Dados Ecológicos Descritiva.xlsx
+caminho_arquivo <- "C:/Users/Desktop/Dados Ecológicos Descritiva.xlsx" 
+# entre aspas "copiar e colar o caminho do arquivo no seu desktop"
+
+# Opção 2: barras invertidas duplas
+# caminho_arquivo <- "C:\\Users\\Desktop\\Dados Ecológicos Descritiva.xlsx"
+
+# Verificar se o arquivo existe
+if (!file.exists(caminho_arquivo)) {
+  stop("Arquivo não encontrado. Verifique o caminho e o nome do arquivo.")
+}
+
+# Importar todas as abas
+morfometria <- read_excel(caminho_arquivo, sheet = "Medidas Morfométricas")
+riqueza     <- read_excel(caminho_arquivo, sheet = "Riqueza de Espécies")
+ambientais  <- read_excel(caminho_arquivo, sheet = "Parâmetros Ambientais")
+crescimento <- read_excel(caminho_arquivo, sheet = "Crescimento Populacional")
+
+# Visualizar as primeiras linhas
+head(morfometria)
+head(riqueza)
+head(ambientais)
+head(crescimento)
+
+# Verificar estrutura dos dados
+str(morfometria)
+summary(morfometria)
