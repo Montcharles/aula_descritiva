@@ -15,6 +15,15 @@ caminho_arquivo <- "C:/Users/Desktop/Dados Ecológicos Descritiva.xlsx"
 # Opção 2: barras invertidas duplas
 # caminho_arquivo <- "C:\\Users\\Desktop\\Dados Ecológicos Descritiva.xlsx"
 
+# ----------------------------- 
+# Opção 3: baixar direto do GitHub (recomendado para Colab/laboratório)
+# -----------------------------
+url_github <- "https://github.com/Montcharles/aula_descritiva/raw/main/Dados%20Ecol%C3%B3gicos%20Descritiva.xlsx"
+caminho_arquivo <- "Dados_Ecologicos_Descritiva.xlsx"  # nome do arquivo depois de baixar
+
+download.file(url_github, destfile = caminho_arquivo, mode = "wb")
+
+
 # Verificar se o arquivo existe
 if (!file.exists(caminho_arquivo)) {
   stop("Arquivo não encontrado. Verifique o caminho e o nome do arquivo.")
