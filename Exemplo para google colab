@@ -1,41 +1,12 @@
 # Acessar: https://colab.research.google.com/
 
-###########################################################
-# 0. Instalação de pacotes (apenas se ainda não existirem)
-###########################################################
-# No Colab (R), em geral você roda estes install.packages()
-# uma vez por sessão, depois pode comentar.
- 
-install.packages("readxl")
-install.packages("dplyr")
-install.packages("ggplot2")
-install.packages("gridExtra")
-install.packages("tidyr")
-install.packages("moments")
-install.packages("vctrs")
-install.packages("dplyr")
-install.packages(c("readxl","ggplot2","gridExtra","tidyr","moments"))
+#Instalar pacotes necessários (executar apenas uma vez)
 
-
-sessionInfo()
-packageVersion("vctrs")
-
-# 1) Atualizar vctrs explicitamente
-install.packages("vctrs")
-
-
-###########################################################
-# 1. Carregar pacotes
-###########################################################
-library(vctrs)
-packageVersion("vctrs")  # opcional, só para conferir se está >= 0.7.1
-
-library(dplyr)
-library(readxl)
-library(ggplot2)
-library(gridExtra)
-library(tidyr)
-library(moments)
+install.packages("readxl") # Importar dados do Excel
+install.packages("dplyr") # Manipulação de dados
+install.packages("ggplot2") # Gráficos avançados
+install.packages("gridExtra") # Múltiplos gráficos
+install.packages("moments") # Assimetria e curtose
 
 ###########################################################
 # 2. Download do arquivo do GitHub para o ambiente do Colab
@@ -68,6 +39,7 @@ head(crescimento)
 str(morfometria)
 summary(morfometria)
 
+
 ###########################################################
 # 4. Tabelas de frequência
 ###########################################################
@@ -88,10 +60,10 @@ freq_habitat <- table(morfometria$Habitat)
 cat("\nFrequência por Habitat:\n")
 print(freq_habitat)
 
+
 ###########################################################
 # 5. Histogramas simples
 ###########################################################
-
 library(ggplot2) # Load the ggplot2 library
 
 ggplot(morfometria, aes(x = Comprimento_cm)) +
@@ -221,6 +193,7 @@ ggplot(morfometria, aes(x = Massa_g)) +
            color = "#6366f1", fontface = "bold", angle = 90, size = 4) +
   theme_minimal(base_size = 14)
 
+
 ###########################################################
 # 9. Boxplots individuais
 ###########################################################
@@ -244,25 +217,17 @@ p_env_box <- ggplot(morfometria, aes(y = Envergadura_cm)) +
 
 grid.arrange(p_comp_box, p_massa_box, p_env_box, nrow = 1)
 
-###########################################################
-# 10. Boxplots conjuntos (pivot_longer -> pivot_longer)
-###########################################################
-morf_long <- morfometria %>%
-  dplyr::select(Comprimento_cm, Massa_g, Envergadura_cm) %>%
-  pivot_longer(cols = everything(),
-               names_to = "Variavel",
-               values_to = "Valor")
 
-ggplot(morf_long, aes(x = Variavel, y = Valor, fill = Variavel)) +
-  geom_boxplot(alpha = 0.8, color = "black") +
-  labs(title = "Boxplots das Variáveis Morfométricas",
-       x = "Variável", y = "Valor") +
-  scale_fill_manual(values = c("Comprimento_cm" = "#38bdf8",
-                               "Massa_g"        = "#f97316",
-                               "Envergadura_cm" = "#22c55e")) +
-  theme_minimal(base_size = 14) +
-  theme(legend.position = "none",
-        axis.text.x = element_text(angle = 20, hjust = 1))
+
+###########################################################
+# 11. Assimetria e curtose com 'moments'
+###########################################################
+library(moments) # Load the moments package
+skew_massa  <- skewness(morfometria$Massa_g)
+kurt_massa  <- kurtosis(morfometria$Massa_g)  # curtose total (não excesso)
+
+skew_massa
+kurt_massa
 
 ###########################################################
 # 11.  Assimetria e curtose com 'moments'
@@ -280,3 +245,66 @@ kurt_massa  <- kurtosis(morfometria$Massa_g, na.rm = TRUE)  # curtose total (nã
 
 skew_massa
 kurt_massa
+
+
+###########################################################
+# 12. Medidas de dispersão (Massa, Comprimento, Envergadura)
+###########################################################
+
+# Função para calcular medidas de dispersão de um vetor numérico
+medidas_dispersao <- function(x, na.rm = TRUE) {
+  if (na.rm) x <- x[!is.na(x)]
+
+  media   <- mean(x)
+  minimo  <- min(x)
+  maximo  <- max(x)
+  n       <- length(x)
+
+  amplitude      <- maximo - minimo            # amplitude (range)
+  variancia      <- var(x)                     # variância amostral
+  desvio_padrao  <- sd(x)                      # desvio padrão
+  iqr_val        <- IQR(x)                     # intervalo interquartil
+  desvio_abs_med <- mean(abs(x - media))       # desvio absoluto médio
+  coef_var       <- (desvio_padrao / media) * 100  # coeficiente de variação (%)
+
+  # data.frame com uma linha
+  data.frame(
+    n                = n,
+    media            = media,
+    minimo           = minimo,
+    maximo           = maximo,
+    amplitude        = amplitude,
+    variancia        = variancia,
+    desvio_padrao    = desvio_padrao,
+    IQR              = iqr_val,
+    desvio_abs_medio = desvio_abs_med,
+    coef_var_percent = coef_var
+  )
+}
+
+# Aplicando às variáveis de interesse em morfometria
+disp_massa <- medidas_dispersao(morfometria$Massa_g)
+disp_massa$variavel <- "Massa_g"
+
+disp_comp <- medidas_dispersao(morfometria$Comprimento_cm)
+disp_comp$variavel <- "Comprimento_cm"
+
+disp_env  <- medidas_dispersao(morfometria$Envergadura_cm)
+disp_env$variavel  <- "Envergadura_cm"
+
+# Juntando tudo em uma única tabela
+disp_morfometria <- rbind(disp_massa, disp_comp, disp_env)
+
+# Reordenar para deixar a coluna "variavel" primeiro
+disp_morfometria <- disp_morfometria[, c("variavel",
+                                         "n", "media", "minimo", "maximo",
+                                         "amplitude", "variancia",
+                                         "desvio_padrao", "IQR",
+                                         "desvio_abs_medio", "coef_var_percent")]
+
+disp_morfometria
+
+
+
+
+
