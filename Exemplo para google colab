@@ -17,6 +17,12 @@ install.packages("dplyr")
 install.packages(c("readxl","ggplot2","gridExtra","tidyr","moments"))
 
 
+sessionInfo()
+packageVersion("vctrs")
+
+# 1) Atualizar vctrs explicitamente
+install.packages("vctrs")
+
 
 ###########################################################
 # 1. Carregar pacotes
