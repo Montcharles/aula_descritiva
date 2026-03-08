@@ -251,3 +251,32 @@ g.fig.suptitle('Matriz de Dispersão Geral: Relações Morfométricas', y=1.02)
 plt.show()
 
 print("🎯 Exploração Morfométrica Finalizada.")
+
+
+
+
+#Célula 11: Distribuição de Variáveis Quantitativas (Histogramas e KDE)
+# Esta célula foca em entender a "forma" dos dados numéricos, identificando se seguem uma distribuição normal ou se possuem assimetria.
+
+
+
+fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+
+# 1. Histograma com KDE para Massa
+sns.histplot(data=morpho, x='massa_g', kde=True, color='skyblue', ax=axes[0])
+axes[0].set_title('Distribuição da Massa (Histograma + KDE)')
+axes[0].set_xlabel('Massa (g)')
+
+# 2. Histograma com KDE para Comprimento
+sns.histplot(data=morpho, x='comprimento_cm', kde=True, color='salmon', ax=axes[1])
+axes[1].set_title('Distribuição do Comprimento (Histograma + KDE)')
+axes[1].set_xlabel('Comprimento (cm)')
+
+plt.tight_layout()
+plt.show()
+
+# Boxplot Geral (para identificar Outliers globais)
+plt.figure(figsize=(10, 4))
+sns.boxplot(data=morpho[['massa_g', 'comprimento_cm', 'envergadura_cm']], orient='h', palette='Set2')
+plt.title('Boxplot Global: Identificação de Outliers')
+plt.show()
