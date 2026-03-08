@@ -1,12 +1,6 @@
 # aula_descritiva
 Dados para atividade prática
 
-Requisitos
-•	R versão 4.0 ou superior (https://www.r-project.org/)
-•	RStudio (https://posit.co/download/rstudio-desktop/)
-•	Baixar Planilha Excel: "Dados Ecológicos para Estatística Descritiva.xlsx"
-•	Conexão com internet para instalar pacotes (primeira vez)
-
 
 Um Pouco Sobre R: O Que É?
 O R não é um "aplicativo" que lhe possibilita através de uma interface gráfica amigável realizar algumas tarefas sem saber exatamente o que está fazendo;
