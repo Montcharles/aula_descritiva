@@ -1,0 +1,282 @@
+#Abra o google colab: https://colab.research.google.com/
+# Configure o ambiente para Python caso esteja em R
+#Copie, cole e execute os comandos abaixos, cada um em uma nova célula
+
+
+
+
+
+#Célula 1: Preparação do Ambiente
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import requests
+import io
+import numpy as np
+
+# Configuração para gráficos de alta qualidade
+%config InlineBackend.figure_format = 'retina'
+sns.set_theme(style="ticks")
+plt.rcParams['figure.figsize'] = [10, 6]
+
+print("✅ Bibliotecas carregadas!")
+
+
+
+
+# Célula 2: Importação e Limpeza "À Prova de Falhas"
+# Explicação: Nesta etapa, convertemos o arquivo Excel em DataFrames e removemos acentos e espaços dos nomes das colunas para evitar erros de digitação.
+
+url = "https://github.com/Montcharles/aula_descritiva/raw/main/Dados%20Ecol%C3%B3gicos%20Descritiva.xlsx"
+
+def robust_clean(df):
+    # Remove acentos, espaços e coloca tudo em minúsculas
+    df.columns = (df.columns.str.normalize('NFKD')
+                  .str.encode('ascii', errors='ignore')
+                  .str.decode('utf-8')
+                  .str.replace(' ', '_')
+                  .str.replace('(', '')
+                  .str.replace(')', '')
+                  .str.lower())
+    return df
+
+# Baixando e limpando cada aba
+response = requests.get(url)
+file = io.BytesIO(response.content)
+
+morpho = robust_clean(pd.read_excel(file, sheet_name=0))
+riqueza = robust_clean(pd.read_excel(file, sheet_name=1))
+ambiental = robust_clean(pd.read_excel(file, sheet_name=2))
+cresc_pop = robust_clean(pd.read_excel(file, sheet_name=3))
+
+print("✅ Colunas detectadas em Morpho:", morpho.columns.tolist())
+
+
+
+
+
+
+
+#Célula 3: Inspeção dos Dados
+
+# Verificando as primeiras linhas e tipos de dados
+print("Resumo Morfometria:")
+display(morpho.head())
+print("\nEstatísticas Básicas:")
+display(morpho.describe())
+
+
+
+
+
+# Célula 4: Variação de Massa por Espécie e Sexo (Gráficos Separados)
+# Aqui analisamos o Dimorfismo Sexual. Observe se em todas as espécies o macho é maior ou se há variações.
+
+# Criando figuras separadas para facilitar a visualização detalhada
+plt.figure(figsize=(10, 6))
+sns.boxplot(data=morpho, x='especie', y='massa_g', hue='sexo', palette='Blues')
+sns.despine()
+plt.title('Comparativo de Massa: Espécie vs Sexo')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(data=morpho, x='especie', y='comprimento_cm', hue='sexo', palette='Greens')
+sns.despine()
+plt.title('Comparativo de Comprimento: Espécie vs Sexo')
+plt.show()
+
+
+
+# Gráficos separados
+#  Gráficos de Massa (Massa por Sexo, separado por Espécie)
+g_massa = sns.FacetGrid(morpho, col="especie", height=5, aspect=0.8, sharey=False)
+g_massa.map_dataframe(sns.boxplot, x="sexo", y="massa_g", hue="sexo", palette="Blues", legend=False)
+g_massa.set_axis_labels("Sexo", "Massa (g)")
+g_massa.set_titles("Espécie: {col_name}")
+plt.subplots_adjust(top=0.85)
+g_massa.fig.suptitle('Distribuição de Massa por Sexo e Espécie')
+plt.show()
+
+#  Gráficos de Comprimento (Comprimento por Sexo, separado por Espécie)
+g_comp = sns.FacetGrid(morpho, col="especie", height=5, aspect=0.8, sharey=False)
+g_comp.map_dataframe(sns.boxplot, x="sexo", y="comprimento_cm", hue="sexo", palette="Greens", legend=False)
+g_comp.set_axis_labels("Sexo", "Comprimento (cm)")
+g_comp.set_titles("Espécie: {col_name}")
+plt.subplots_adjust(top=0.85)
+g_comp.fig.suptitle('Distribuição de Comprimento por Sexo e Espécie')
+plt.show()
+
+
+
+
+
+
+# Célula 5: Influência do Habitat na Morfologia (Separado por Espécie)
+# Verificando se o ambiente (Mata vs Cerrado vs Urbano) afeta o peso de cada espécie de forma diferente.
+
+# Criando a grade de gráficos (um para cada espécie)
+g_habitat = sns.FacetGrid(morpho, col="especie", col_wrap=3, height=5, sharey=False)
+
+# Adicionando o Boxplot de fundo (cor cinza claro para destacar os pontos)
+g_habitat.map_dataframe(sns.boxplot, x="habitat", y="massa_g", color=".9", fliersize=0)
+
+# Sobrepondo o Swarmplot para ver a distribuição real dos indivíduos
+# Usamos hue="habitat" para dar cores distintas a cada ambiente
+g_habitat.map_dataframe(sns.swarmplot, x="habitat", y="massa_g", hue="habitat", palette="viridis", size=6)
+
+# Ajustes de títulos e eixos
+g_habitat.set_axis_labels("Habitat", "Massa (g)")
+g_habitat.set_titles("Espécie: {col_name}")
+plt.subplots_adjust(top=0.9)
+g_habitat.fig.suptitle('Análise de Massa por Habitat em cada Espécie', fontsize=14)
+
+plt.show()
+
+
+
+
+
+
+
+#Célula 6: Relação Alométrica (Dispersão)
+# Verificamos a correlação visual. Se o ponto sobe em diagonal, as variáveis crescem juntas.
+
+
+plt.figure(figsize=(10, 7))
+sns.scatterplot(data=morpho, x='comprimento_cm', y='massa_g', 
+                hue='especie', style='sexo', s=150, alpha=0.7)
+plt.title('Correlação Biométrica: Comprimento vs Massa')
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.show()
+
+
+
+
+
+# Célula 6: Relação Alométrica (Dispersão por Espécie)
+# Analisando como o crescimento em comprimento se traduz em ganho de massa para cada espécie.
+
+# Usamos lmplot para criar a grade e já incluir a linha de tendência
+g_alom = sns.lmplot(
+    data=morpho, 
+    x='comprimento_cm', 
+    y='massa_g', 
+    col='especie',      # Cria um gráfico para cada espécie
+    hue='sexo',         # Cores diferentes para Machos e Fêmeas
+    markers=['o', 's'], # Círculos para um sexo, quadrados para outro
+    palette='magma', 
+    col_wrap=3,         # Organiza em 3 colunas
+    height=5, 
+    aspect=0.9, 
+    scatter_kws={'s': 100, 'alpha': 0.6}, # Tamanho e transparência dos pontos
+    facet_kws={'sharey': False, 'sharex': False} # Escalas independentes para precisão
+)
+
+# Ajustes finos de títulos e eixos
+g_alom.set_axis_labels("Comprimento (cm)", "Massa (g)")
+g_alom.set_titles("Espécie: {col_name}")
+plt.subplots_adjust(top=0.88)
+g_alom.fig.suptitle('Correlação Alométrica: Comprimento vs Massa por Espécie e Sexo', fontsize=14)
+
+plt.show()
+
+
+
+
+#Célula 7: Violin Plot (Densidade + Estatística)
+# O Violin Plot é uma evolução do Boxplot. Ele mostra a "forma" da distribuição (onde há mais indivíduos) através da largura do desenho. É ideal para identificar se a distribuição é multimodal (dois picos).
+
+plt.figure(figsize=(12, 6))
+
+# Comparando a distribuição da massa por espécie e sexo
+sns.violinplot(data=morpho, x='especie', y='massa_g', hue='sexo', 
+               split=True, inner="quart", palette="Pastel1")
+
+plt.title('Distribuição de Densidade da Massa (Violin Plot)')
+plt.ylabel('Massa (g)')
+sns.despine()
+plt.show()
+
+
+
+
+
+#Célula 8: Gráfico de Barras com Intervalo de Confiança
+# Diferente do boxplot, o gráfico de barras foca na estimativa da média. O "risquinho" no topo (error bar) representa o intervalo de confiança ou desvio padrão, mostrando o quanto podemos confiar nessa média.
+
+
+plt.figure(figsize=(10, 6))
+
+# Massa média por habitat com barra de erro (CI 95%)
+sns.barplot(data=morpho, x='habitat', y='massa_g', hue='especie', 
+            capsize=.1, palette="viridis")
+
+plt.title('Massa Média por Habitat (Com Intervalo de Confiança)')
+plt.ylabel('Massa Média (g)')
+plt.legend(title='Espécie', bbox_to_anchor=(1, 1))
+plt.show()
+
+
+
+
+# Célula 9: Point Plot (Análise de Interação)
+# Este gráfico é excelente para ver tendências. Ele conecta as médias com linhas, facilitando a visualização de como o Sexo e o Habitat interagem. Se as linhas se cruzam, há uma forte indicação de que o ambiente afeta machos e fêmeas de forma diferente.
+
+plt.figure(figsize=(10, 6))
+
+# Analisando se a diferença de massa entre sexos muda conforme o habitat
+sns.pointplot(data=morpho, x='habitat', y='massa_g', hue='sexo', 
+              markers=["o", "x"], linestyles=["-", "--"])
+
+plt.title('Tendência de Massa: Interação Sexo vs Habitat')
+plt.ylabel('Massa (g)')
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.show()
+
+
+
+
+
+# Célula 10: Pair Plot (Matriz de Dispersão Completa)
+# Para encerrar a exploração morfométrica, usamos o "gráfico de tudo contra tudo". Ele gera automaticamente histogramas na diagonal e gráficos de dispersão para todos os pares de variáveis numéricas. É a ferramenta definitiva para encontrar padrões inesperados.
+
+
+# Analisando Comprimento, Massa e Envergadura de uma só vez
+# 'kind=reg' adiciona uma reta de regressão em cada gráfico
+g = sns.pairplot(morpho, vars=['comprimento_cm', 'massa_g', 'envergadura_cm'], 
+                 hue='especie', palette='husl', diag_kind='kde', height=3)
+
+g.fig.suptitle('Matriz de Dispersão Geral: Relações Morfométricas', y=1.02)
+plt.show()
+
+print("🎯 Exploração Morfométrica Finalizada.")
+
+
+
+
+#Célula 11: Distribuição de Variáveis Quantitativas (Histogramas e KDE)
+# Esta célula foca em entender a "forma" dos dados numéricos, identificando se seguem uma distribuição normal ou se possuem assimetria.
+
+
+
+fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+
+# 1. Histograma com KDE para Massa
+sns.histplot(data=morpho, x='massa_g', kde=True, color='skyblue', ax=axes[0])
+axes[0].set_title('Distribuição da Massa (Histograma + KDE)')
+axes[0].set_xlabel('Massa (g)')
+
+# 2. Histograma com KDE para Comprimento
+sns.histplot(data=morpho, x='comprimento_cm', kde=True, color='salmon', ax=axes[1])
+axes[1].set_title('Distribuição do Comprimento (Histograma + KDE)')
+axes[1].set_xlabel('Comprimento (cm)')
+
+plt.tight_layout()
+plt.show()
+
+# Boxplot Geral (para identificar Outliers globais)
+plt.figure(figsize=(10, 4))
+sns.boxplot(data=morpho[['massa_g', 'comprimento_cm', 'envergadura_cm']], orient='h', palette='Set2')
+plt.title('Boxplot Global: Identificação de Outliers')
+plt.show()
